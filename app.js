@@ -1,5 +1,49 @@
+let products = [];
 let order = [];
 
+// 🔽 загрузка прайса (вставь свою ссылку)
+fetch("https://docs.google.com/spreadsheets/d/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/edit?usp=sharing")
+  .then(res => res.json())
+  .then(data => {
+    products = data;
+  });
+
+// 🔍 поиск
+function searchProduct() {
+  const value = document.getElementById("search").value.toLowerCase();
+  const box = document.getElementById("suggestions");
+
+  if (!value) {
+    box.innerHTML = "";
+    return;
+  }
+
+  const results = products.filter(p =>
+    p["Артикул"]?.toLowerCase().includes(value)
+  ).slice(0, 5);
+
+  box.innerHTML = results.map(p => `
+    <div onclick="selectProduct(\`${p["Артикул"]}\`, ${p["Цена"]})">
+      ${p["Артикул"]} (${p["Цена"]} ₽)
+    </div>
+  `).join("");
+}
+
+// выбор
+function selectProduct(article, price) {
+  document.getElementById("search").value = article;
+  document.getElementById("price").value = price;
+  document.getElementById("suggestions").innerHTML = "";
+}
+
+// закрытие списка
+document.addEventListener("click", function(e) {
+  if (!e.target.closest("#search")) {
+    document.getElementById("suggestions").innerHTML = "";
+  }
+});
+
+// добавить товар
 function addItem() {
   const name = document.getElementById("search").value;
   const price = Number(document.getElementById("price").value);
@@ -16,6 +60,7 @@ function addItem() {
   render();
 }
 
+// отрисовка
 function render() {
   const box = document.getElementById("order");
   box.innerHTML = "";
@@ -42,12 +87,13 @@ function render() {
   document.getElementById("total").innerText = "Итого: " + total + " ₽";
 }
 
+// очистка
 function clearOrder() {
   order = [];
   render();
 }
 
-// 🔥 ПЕЧАТЬ (ИСПРАВЛЕННАЯ)
+// 🖨 печать
 function printOrder() {
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;

@@ -22,7 +22,9 @@
 <input id="invoiceNumber" placeholder="Введите номер">
 
 <h2>Добавить товар</h2>
-<input id="search" placeholder="Наименование">
+<input id="search" placeholder="Артикул" oninput="searchProduct()">
+<div id="suggestions"></div>
+
 <input id="price" placeholder="Цена">
 <input id="qty" placeholder="Количество" type="number">
 
