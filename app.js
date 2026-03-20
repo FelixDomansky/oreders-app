@@ -1,15 +1,20 @@
 let products = [];
 let order = [];
 
-// 🔽 загрузка прайса
+// загрузка прайса
 fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1")
   .then(res => res.json())
   .then(data => {
     products = data;
-    console.log("Прайс загружен:", products);
   });
 
-// 🔍 поиск товара
+// перевод суммы в текст (упрощенный)
+function numberToText(num) {
+  if (!num) return "ноль рублей";
+  return num + " рублей";
+}
+
+// поиск
 function searchProduct() {
   const value = document.getElementById("search").value.toLowerCase();
   const box = document.getElementById("suggestions");
@@ -25,39 +30,29 @@ function searchProduct() {
 
   box.innerHTML = results.map(p => `
     <div onclick="selectProduct(\`${p["Артикул"]}\`, ${p["Цена"]})"
-         style="padding:8px; border:1px solid #ccc; background:white; cursor:pointer;">
+         style="padding:8px;border:1px solid #ccc;background:white;cursor:pointer;">
       ${p["Артикул"]} (${p["Цена"]} ₽)
     </div>
   `).join("");
 }
 
-// выбор товара
+// выбор
 function selectProduct(article, price) {
   document.getElementById("search").value = article;
   document.getElementById("price").value = price;
   document.getElementById("suggestions").innerHTML = "";
 }
 
-// закрытие списка
-document.addEventListener("click", function(e) {
-  if (!e.target.closest("#search")) {
-    document.getElementById("suggestions").innerHTML = "";
-  }
-});
-
-// ENTER в поиске
+// ENTER
 document.getElementById("search").addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
     e.preventDefault();
-
     const first = document.querySelector("#suggestions div");
     if (first) first.click();
-
     addItem();
   }
 });
 
-// ENTER в количестве
 document.getElementById("qty").addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -65,14 +60,13 @@ document.getElementById("qty").addEventListener("keydown", function(e) {
   }
 });
 
-// ➕ добавить товар
+// добавить
 function addItem() {
   const name = document.getElementById("search").value;
   let price = Number(document.getElementById("price").value);
   const qty = Number(document.getElementById("qty").value) || 1;
 
   if (!name) return;
-
   if (!price) price = 0;
 
   order.push({ name, price, qty });
@@ -82,10 +76,9 @@ function addItem() {
   document.getElementById("qty").value = "";
 
   render();
-  document.getElementById("search").focus();
 }
 
-// 🔄 отрисовка
+// отрисовка
 function render() {
   const box = document.getElementById("order");
   box.innerHTML = "";
@@ -112,13 +105,13 @@ function render() {
   document.getElementById("total").innerText = "Итого: " + total + " ₽";
 }
 
-// 🧹 очистка
+// очистка
 function clearOrder() {
   order = [];
   render();
 }
 
-// 🖨 ПЕЧАТЬ (ФИНАЛ)
+// печать
 function printOrder() {
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;
@@ -161,7 +154,7 @@ function printOrder() {
 
         <h2>НАКЛАДНАЯ № ${number || "________"}</h2>
 
-        <div><b>Кому:</b> ${name || "—"}</div>
+        <div><b>Кому:</b> ${name || ""}</div>
         <div><b>От кого:</b> ${from}</div>
 
         <table>
@@ -178,7 +171,10 @@ function printOrder() {
 
           <tr>
             <td colspan="5" style="text-align:right;"><b>Итого:</b></td>
-            <td><b>${total} ₽</b></td>
+            <td>
+              <b>${total} ₽</b><br>
+              <small>${numberToText(total)}</small>
+            </td>
           </tr>
         </table>
 
@@ -243,7 +239,6 @@ function printOrder() {
 
         h2 {
           text-align:center;
-          margin:5px 0;
         }
 
         .date {
