@@ -19,10 +19,18 @@
 </select>
 
 <h2>Номер накладной</h2>
-<input id="invoiceNumber" placeholder="Введите номер">
+<input id="invoiceNumber" placeholder="Введите номер (или оставить пустым)">
 
 <h2>Добавить товар</h2>
-<input id="search" placeholder="Артикул" oninput="searchProduct()">
+
+<input id="search"
+       placeholder="Начните вводить артикул или введите свой товар"
+       oninput="searchProduct()">
+
+<small style="color:gray; display:block; margin-bottom:5px;">
+  Можно выбрать из базы или ввести вручную
+</small>
+
 <div id="suggestions"></div>
 
 <input id="price" placeholder="Цена">
