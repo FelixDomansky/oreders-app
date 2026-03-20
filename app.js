@@ -126,11 +126,23 @@ function printOrder() {
   const from = document.getElementById("from").value;
   const number = document.getElementById("invoiceNumber").value || "";
 
-  function createDoc() {
+  const ITEMS_PER_DOC = 7;
+
+  function chunkArray(arr, size) {
+    let result = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
+  }
+
+  const chunks = chunkArray(order, ITEMS_PER_DOC);
+
+  function createDoc(items) {
     let rows = "";
     let total = 0;
 
-    order.forEach((i, index) => {
+    items.forEach((i, index) => {
       total += i.price * i.qty;
 
       rows += `
@@ -148,7 +160,7 @@ function printOrder() {
     return `
       <div class="doc">
         <div class="date">от «__» __________ 2026 г.</div>
-        <h2>НАКЛАДНАЯ № ${number}</h2>
+        <h2>НАКЛАДНАЯ ${number ? "№ " + number : ""}</h2>
 
         <div><b>Кому:</b> ${name}</div>
         <div><b>От кого:</b> ${from}</div>
@@ -179,6 +191,18 @@ function printOrder() {
     `;
   }
 
+  let pages = "";
+
+  for (let i = 0; i < chunks.length; i += 2) {
+    pages += `
+      <div class="page">
+        ${createDoc(chunks[i])}
+        <div class="cut"></div>
+        ${chunks[i + 1] ? createDoc(chunks[i + 1]) : ""}
+      </div>
+    `;
+  }
+
   const html = `
   <html>
   <head>
@@ -192,6 +216,7 @@ function printOrder() {
           height: 277mm;
           padding: 10mm;
           box-sizing: border-box;
+          page-break-after: always;
         }
 
         .doc {
@@ -236,11 +261,7 @@ function printOrder() {
   </head>
 
   <body>
-    <div class="page">
-      ${createDoc()}
-      <div class="cut"></div>
-      ${createDoc()}
-    </div>
+    ${pages}
   </body>
   </html>
   `;
