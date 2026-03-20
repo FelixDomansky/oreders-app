@@ -2,7 +2,7 @@ let products = [];
 let order = [];
 
 // 🔽 загрузка прайса
-fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/1")
+fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1")
   .then(res => res.json())
   .then(data => {
     products = data;
