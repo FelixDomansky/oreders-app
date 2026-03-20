@@ -94,12 +94,12 @@ function searchProduct() {
     String(p["Артикул"] || "").toLowerCase().includes(value)
   ).slice(0, 5);
 
-  box.innerHTML = results.map(p => 
-    <div onclick="selectProduct(\${p["Артикул"]}\, ${p["Цена"]})"
+  box.innerHTML = results.map(p => `
+    <div onclick="selectProduct(\`${p["Артикул"]}\`, ${p["Цена"]})"
          style="padding:8px;border:1px solid #ccc;background:white;cursor:pointer;">
       ${p["Артикул"]} (${p["Цена"]} ₽)
     </div>
-  ).join("");
+  `).join("");
 }
 
 // выбор
@@ -154,16 +154,17 @@ function render() {
 
   order.forEach((i, index) => {
     total += i.price * i.qty;
-const div = document.createElement("div");
+
+    const div = document.createElement("div");
     div.className = "item";
 
-    div.innerHTML = 
+    div.innerHTML = `
       <input value="${i.name}" onchange="order[${index}].name=this.value">
       <input value="${i.qty}" type="number" onchange="order[${index}].qty=this.value; render();">
       <input value="${i.price}" type="number" onchange="order[${index}].price=this.value; render();">
       <b>${i.price * i.qty} ₽</b>
       <button onclick="order.splice(${index},1); render();">❌</button>
-    ;
+    `;
 
     box.appendChild(div);
   });
@@ -202,7 +203,7 @@ function printOrder() {
     items.forEach((i, index) => {
       total += i.price * i.qty;
 
-      rows += 
+      rows += `
         <tr>
           <td>${index + 1}</td>
           <td>${i.name}</td>
@@ -211,10 +212,10 @@ function printOrder() {
           <td>${i.price}</td>
           <td>${i.price * i.qty}</td>
         </tr>
-      ;
+      `;
     });
 
-    return 
+    return `
       <div class="doc">
         <div class="date">от «__» __________ 2026 г.</div>
 
@@ -251,22 +252,22 @@ function printOrder() {
           <div>Принял: _____________</div>
         </div>
       </div>
-    ;
+    `;
   }
 
   let pages = "";
 
   chunks.forEach(chunk => {
-    pages += 
+    pages += `
       <div class="page">
         ${createDoc(chunk)}
         <div class="cut"></div>
         ${createDoc(chunk)}
       </div>
-    ;
+    `;
   });
 
-  const html = 
+  const html = `
   <html>
   <head>
     <style>
@@ -326,7 +327,7 @@ function printOrder() {
     ${pages}
   </body>
   </html>
-  ;
+  `;
 
   const win = window.open("", "_blank");
   win.document.write(html);
