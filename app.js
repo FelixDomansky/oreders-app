@@ -12,6 +12,7 @@ fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Л�
   })
   .catch(() => alert("Ошибка загрузки прайса"));
 
+
 // ===== СУММА ПРОПИСЬЮ =====
 function numberToText(num) {
   const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
@@ -79,6 +80,7 @@ function numberToText(num) {
   return result.trim();
 }
 
+
 // 🔍 поиск
 document.getElementById("search").addEventListener("input", function () {
   const value = this.value.toLowerCase();
@@ -107,6 +109,7 @@ window.selectProduct = function(article, price) {
   document.getElementById("suggestions").innerHTML = "";
 };
 
+
 // ENTER
 document.getElementById("search").addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
@@ -124,6 +127,7 @@ document.getElementById("qty").addEventListener("keydown", function(e) {
   }
 });
 
+
 // ➕ добавить
 window.addItem = function() {
   const name = document.getElementById("search").value;
@@ -131,9 +135,8 @@ window.addItem = function() {
   const qty = Number(document.getElementById("qty").value) || 1;
 
   if (!name) return;
-  if (!price) price = 0;
 
-  order.push({ name, price, qty });
+  order.push({ name, price: price || 0, qty });
 
   document.getElementById("search").value = "";
   document.getElementById("price").value = "";
@@ -142,6 +145,7 @@ window.addItem = function() {
   render();
   document.getElementById("search").focus();
 };
+
 
 // 🔄 отрисовка
 function render() {
@@ -161,7 +165,7 @@ function render() {
       <input value="${i.qty}" type="number" onchange="order[${index}].qty=this.value; render();">
       <input value="${i.price}" type="number" onchange="order[${index}].price=this.value; render();">
       <b>${i.price * i.qty} ₽</b>
-      <button onclick="order.splice(${index},1); render();">❌</button>
+      <button onclick="order.splice(${index},1); render();">Удалить</button>
     `;
 
     box.appendChild(div);
@@ -170,13 +174,15 @@ function render() {
   document.getElementById("total").innerText = "Итого: " + total + " ₽";
 }
 
+
 // 🧹 очистка
 window.clearOrder = function() {
   order = [];
   render();
 };
 
-// 🖨 ПЕЧАТЬ (ТВОЙ БЛАНК — РАБОТАЕТ)
+
+// 🖨 ПЕЧАТЬ (КРАСИВЫЙ БЛАНК)
 window.printOrder = function() {
 
   const name = document.getElementById("name").value;
@@ -236,12 +242,10 @@ window.printOrder = function() {
           ${rows}
 
           <tr>
-            <td colspan="6" style="text-align:left; padding-top:10px;">
+            <td colspan="6" style="text-align:left;">
               <b>Итого:</b> ${total} ₽
               <br>
-              <span style="font-size:12px;">
-                ${numberToText(total)}
-              </span>
+              ${numberToText(total)}
             </td>
           </tr>
         </table>
@@ -271,7 +275,6 @@ window.printOrder = function() {
   <head>
     <style>
       @page { margin: 0; }
-
       body { font-family: Arial; }
 
       .page {
@@ -333,13 +336,16 @@ window.printOrder = function() {
     return;
   }
 
-  win.document.open();
   win.document.write(html);
   win.document.close();
 
-  setTimeout(() => {
-    win.print();
-  }, 300);
+  setTimeout(() => win.print(), 300);
+};
+
+
+// 📄 PDF (ТОТ ЖЕ БЛАНК)
+window.downloadPDF = function() {
+  window.printOrder(); // делаем через печать → сохранить как PDF
 };
 
 });

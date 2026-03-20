@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Накладные</title>
 
-  <!-- 🔥 адаптив -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="style.css">
@@ -26,9 +25,7 @@
 
 <h2>Добавить товар</h2>
 
-<input id="search"
-       placeholder="Начните вводить артикул или введите свой товар">
-
+<input id="search" placeholder="Начните вводить артикул или введите свой товар">
 <small>Можно выбрать из базы или ввести вручную</small>
 
 <div id="suggestions"></div>
@@ -36,21 +33,18 @@
 <input id="price" placeholder="Цена">
 <input id="qty" type="number" placeholder="Количество">
 
-<button onclick="addItem()">➕ Добавить</button>
+<button onclick="addItem()">Добавить</button>
 
 <h2>Заказ</h2>
 <div id="order"></div>
 
 <h3 id="total">Итого: 0 ₽</h3>
 
-<button onclick="printOrder()">🖨 Печать</button>
-<button onclick="downloadPDF()">📄 Скачать PDF</button>
-<button onclick="clearOrder()">🧹 Очистить</button>
+<button onclick="printOrder()">Печать</button>
+<button onclick="downloadPDF()">Скачать PDF</button>
+<button onclick="clearOrder()">Очистить</button>
 
-<!-- 🔥 PDF библиотека -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<!-- твой JS -->
 <script src="app.js" defer></script>
 
 </body>
