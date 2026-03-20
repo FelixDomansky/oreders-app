@@ -126,7 +126,7 @@ function printOrder() {
   const from = document.getElementById("from").value;
   const number = document.getElementById("invoiceNumber").value || "";
 
-  const ITEMS_PER_DOC = 7;
+  const ITEMS_PER_DOC = 10;
 
   function chunkArray(arr, size) {
     let result = [];
@@ -193,15 +193,15 @@ function printOrder() {
 
   let pages = "";
 
-  for (let i = 0; i < chunks.length; i += 2) {
+  chunks.forEach(chunk => {
     pages += `
       <div class="page">
-        ${createDoc(chunks[i])}
+        ${createDoc(chunk)}
         <div class="cut"></div>
-        ${chunks[i + 1] ? createDoc(chunks[i + 1]) : ""}
+        ${createDoc(chunk)}
       </div>
     `;
-  }
+  });
 
   const html = `
   <html>
