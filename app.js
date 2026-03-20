@@ -8,19 +8,24 @@ fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Л�
     products = data;
   });
 
-// перевод суммы в текст (упрощенный)
-
+// ===== СУММА ПРОПИСЬЮ (рубли/копейки со склонениями) =====
 function numberToText(num) {
   const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
+  const onesFemale = ["", "одна", "две"];
   const teens = ["десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"];
   const tens = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"];
   const hundreds = ["", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"];
 
-  if (num === 0) return "ноль рублей";
+  function plural(n, one, two, five) {
+    n = Math.abs(n) % 100;
+    let n1 = n % 10;
+    if (n > 10 && n < 20) return five;
+    if (n1 > 1 && n1 < 5) return two;
+    if (n1 == 1) return one;
+    return five;
+  }
 
-  let result = "";
-
-  function parseHundreds(n) {
+  function parseHundreds(n, female = false) {
     let str = "";
 
     if (n >= 100) {
@@ -39,21 +44,62 @@ function numberToText(num) {
     }
 
     if (n > 0) {
-      str += ones[n] + " ";
+      if (female && n <= 2) {
+        str += onesFemale[n] + " ";
+      } else {
+        str += ones[n] + " ";
+      }
     }
 
     return str;
   }
 
-  if (num >= 1000) {
-    const thousands = Math.floor(num / 1000);
-    result += parseHundreds(thousands) + "тысяч ";
-    num %= 1000;
+  let rub = Math.floor(num);
+  let kop = Math.round((num - rub) * 100);
+
+  let result = "";
+
+  if (rub === 0) {
+    result = "ноль ";
   }
 
-  result += parseHundreds(num);
+  if (rub >= 1000) {
+    let thousands = Math.floor(rub / 1000);
+    result += parseHundreds(thousands, true);
+    result += plural(thousands, "тысяча", "тысячи", "тысяч") + " ";
+    rub %= 1000;
+  }
 
-  return result.trim() + " рублей";
+  result += parseHundreds(rub);
+  result += plural(Math.floor(num), "рубль", "рубля", "рублей");
+
+  if (kop > 0) {
+    result += " " + kop + " " + plural(kop, "копейка", "копейки", "копеек");
+  }
+
+  return result.trim();
+}
+
+// поиск
+function searchProduct() {
+  const value = document.getElementById("search").value.toLowerCase();
+  const box = document.getElementById("suggestions");
+
+  if (!value) {
+    box.innerHTML = "";
+    return;
+  }
+
+  const results = products.filter(p =>
+    String(p["Артикул"] || "").toLowerCase().includes(value)
+  ).slice(0, 5);
+
+  box.innerHTML = results.map(p => 
+    <div onclick="selectProduct(\${p["Артикул"]}\, ${p["Цена"]})"
+         style="padding:8px;border:1px solid #ccc;background:white;cursor:pointer;">
+      ${p["Артикул"]} (${p["Цена"]} ₽)
+    </div>
+  ).join("");
 }
 
 // выбор
@@ -96,6 +142,7 @@ function addItem() {
   document.getElementById("qty").value = "";
 
   render();
+  document.getElementById("search").focus();
 }
 
 // отрисовка
@@ -107,17 +154,16 @@ function render() {
 
   order.forEach((i, index) => {
     total += i.price * i.qty;
-
-    const div = document.createElement("div");
+const div = document.createElement("div");
     div.className = "item";
 
-    div.innerHTML = `
+    div.innerHTML = 
       <input value="${i.name}" onchange="order[${index}].name=this.value">
       <input value="${i.qty}" type="number" onchange="order[${index}].qty=this.value; render();">
       <input value="${i.price}" type="number" onchange="order[${index}].price=this.value; render();">
       <b>${i.price * i.qty} ₽</b>
       <button onclick="order.splice(${index},1); render();">❌</button>
-    `;
+    ;
 
     box.appendChild(div);
   });
@@ -131,7 +177,7 @@ function clearOrder() {
   render();
 }
 
-// печать
+// печать (10 позиций на накладную, 2 копии на лист)
 function printOrder() {
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;
@@ -156,7 +202,7 @@ function printOrder() {
     items.forEach((i, index) => {
       total += i.price * i.qty;
 
-      rows += `
+      rows += 
         <tr>
           <td>${index + 1}</td>
           <td>${i.name}</td>
@@ -165,10 +211,10 @@ function printOrder() {
           <td>${i.price}</td>
           <td>${i.price * i.qty}</td>
         </tr>
-      `;
+      ;
     });
 
-    return `
+    return 
       <div class="doc">
         <div class="date">от «__» __________ 2026 г.</div>
 
@@ -190,10 +236,12 @@ function printOrder() {
           ${rows}
 
           <tr>
-            <td colspan="5" style="text-align:right;"><b>Итого:</b></td>
-            <td>
-              <b>${total} ₽</b><br>
-              <small>${numberToText(total)}</small>
+            <td colspan="6" style="text-align:left; padding-top:10px;">
+              <b>Итого:</b> ${total} ₽
+              <br>
+              <span style="font-size:12px;">
+                ${numberToText(total)}
+              </span>
             </td>
           </tr>
         </table>
@@ -203,22 +251,22 @@ function printOrder() {
           <div>Принял: _____________</div>
         </div>
       </div>
-    `;
+    ;
   }
 
   let pages = "";
 
   chunks.forEach(chunk => {
-    pages += `
+    pages += 
       <div class="page">
         ${createDoc(chunk)}
         <div class="cut"></div>
         ${createDoc(chunk)}
       </div>
-    `;
+    ;
   });
 
-  const html = `
+  const html = 
   <html>
   <head>
     <style>
@@ -278,7 +326,7 @@ function printOrder() {
     ${pages}
   </body>
   </html>
-  `;
+  ;
 
   const win = window.open("", "_blank");
   win.document.write(html);
