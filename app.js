@@ -1,4 +1,25 @@
 let order = [];
+let products = {};
+
+// 👉 ВСТАВЬ СЮДА СВОЙ GOOGLE SCRIPT URL
+const API_URL = "ТВОЙ_URL";
+
+// загрузка прайса
+fetch(API_URL)
+  .then(res => res.json())
+  .then(data => {
+    data.forEach(p => {
+      products[p.article] = p.price;
+    });
+  });
+
+// автоподстановка цены
+document.getElementById("search").addEventListener("input", function () {
+  const val = this.value;
+  if (products[val]) {
+    document.getElementById("price").value = products[val];
+  }
+});
 
 function addItem() {
   const name = document.getElementById("search").value;
@@ -47,57 +68,76 @@ function clearOrder() {
   render();
 }
 
-function sendToCloud(total) {
-  return fetch("https://script.google.com/macros/s/AKfycbwEH-i26FXXk2BYMjO89Oct4GMEwsOL_REuue168DwAjONqOmNbYKbx1RWu2F2x7qYOqw/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      key: "MY_SECRET_123",
-      name: document.getElementById("name").value,
-      from: document.getElementById("from").value,
-      items: order,
-      total: total
-    })
-  });
-}
-
 function printOrder() {
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;
-  let invoice = document.getElementById("invoiceNumber").value || "____";
+  let baseNumber = parseInt(document.getElementById("invoiceNumber").value) || 1;
 
-  let rows = "";
-  let total = 0;
+  // создаём временный контейнер для расчёта
+  const temp = document.createElement("div");
+  temp.style.position = "absolute";
+  temp.style.visibility = "hidden";
+  temp.style.width = "210mm";
+  temp.style.padding = "10mm";
+  temp.style.fontFamily = "Times New Roman";
 
-  order.forEach((i, index) => {
-    total += i.price * i.qty;
-
-    rows += `
+  temp.innerHTML = `
+    <table style="width:100%; border-collapse:collapse;">
       <tr>
-        <td>${index + 1}</td>
-        <td>${i.name}</td>
-        <td>шт</td>
-        <td>${i.qty}</td>
-        <td>${i.price}</td>
-        <td>${i.price * i.qty}</td>
+        <td style="border:1px solid black; padding:5px;">Тест</td>
       </tr>
-    `;
-  });
+    </table>
+  `;
 
-  for (let i = order.length; i < 8; i++) {
-    rows += `<tr><td>${i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  document.body.appendChild(temp);
+
+  const rowHeight = temp.querySelector("td").offsetHeight;
+
+  // высота под одну накладную (~половина листа)
+  const availableHeight = 140; // мм примерно
+  const pxPerMm = temp.offsetWidth / 210;
+
+  const rowsPerDoc = Math.floor((availableHeight * pxPerMm) / rowHeight);
+
+  document.body.removeChild(temp);
+
+  // разбиваем заказ
+  let chunks = [];
+  for (let i = 0; i < order.length; i += rowsPerDoc) {
+    chunks.push(order.slice(i, i + rowsPerDoc));
   }
 
-  function doc() {
-    return `
-      <div style="height:48%;">
-        <div style="text-align:right;">от «__» __________ 2026 г.</div>
+  if (chunks.length === 0) chunks.push([]);
 
-        <h2 style="text-align:center;">НАКЛАДНАЯ № ${invoice}</h2>
+  function createDoc(items, number) {
+    let rows = "";
+    let total = 0;
+
+    items.forEach((i, index) => {
+      total += i.price * i.qty;
+
+      rows += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${i.name}</td>
+          <td>шт</td>
+          <td>${i.qty}</td>
+          <td>${i.price}</td>
+          <td>${i.price * i.qty}</td>
+        </tr>
+      `;
+    });
+
+    return `
+      <div class="doc">
+        <div class="date">от «__» __________ 2026 г.</div>
+
+        <h2>НАКЛАДНАЯ № ${number}</h2>
 
         <div><b>Кому:</b> ${name}</div>
         <div><b>От кого:</b> ${from}</div>
 
-        <table style="width:100%; border-collapse:collapse; border:2px solid black;">
+        <table>
           <tr>
             <th>№</th>
             <th>Наименование</th>
@@ -110,12 +150,16 @@ function printOrder() {
           ${rows}
 
           <tr>
-            <td colspan="5" style="text-align:right;"><b>Итого:</b></td>
+            <td colspan="5" class="right"><b>Итого:</b></td>
             <td><b>${total} ₽</b></td>
+          </tr>
+
+          <tr>
+            <td colspan="6" class="right">В том числе НДС ( )%</td>
           </tr>
         </table>
 
-        <div style="margin-top:30px; display:flex; justify-content:space-between;">
+        <div class="sign">
           <div>Сдал: _____________</div>
           <div>Принял: _____________</div>
         </div>
@@ -123,23 +167,99 @@ function printOrder() {
     `;
   }
 
+  let pagesHTML = "";
+  let docIndex = 0;
+
+  while (docIndex < chunks.length) {
+    const doc1 = createDoc(chunks[docIndex], baseNumber + docIndex);
+    const doc2 = createDoc(
+      chunks[docIndex + 1] || [],
+      baseNumber + docIndex + 1
+    );
+
+    pagesHTML += `
+      <div class="page">
+        ${doc1}
+        <hr>
+        ${doc2}
+      </div>
+    `;
+
+    docIndex += 2;
+  }
+
   const html = `
   <html>
-  <body style="font-family:Times New Roman; padding:20px;">
-    ${doc()}
-    <hr style="border-top:2px dashed black;">
-    ${doc()}
+  <head>
+    <style>
+      body {
+        font-family: "Times New Roman";
+        margin: 0;
+      }
+
+      .page {
+        height: 297mm;
+        padding: 10mm;
+        page-break-after: always;
+      }
+
+      .doc {
+        height: 48%;
+      }
+
+      h2 {
+        text-align: center;
+        margin: 5px 0;
+      }
+
+      .date {
+        text-align: right;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 2px solid black;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border: 1px solid black;
+        padding: 5px;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .right {
+        text-align: right;
+      }
+
+      .sign {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      hr {
+        border-top: 2px dashed black;
+        margin: 5px 0;
+      }
+
+      @media print {
+        .page {
+          page-break-after: always;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    ${pagesHTML}
   </body>
   </html>
   `;
 
   const win = window.open("");
   win.document.write(html);
-
-  sendToCloud(total)
-    .then(() => win.print())
-    .catch(() => {
-      alert("Ошибка облака");
-      win.print();
-    });
+  win.print();
 }
