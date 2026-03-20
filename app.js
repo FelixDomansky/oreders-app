@@ -1,20 +1,24 @@
+document.addEventListener("DOMContentLoaded", function () {
+
 let products = [];
 let order = [];
 
-// загрузка прайса
+// 🔥 загрузка прайса
 fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1")
   .then(res => res.json())
   .then(data => {
     products = data;
-  });
+    console.log("Прайс загружен:", products);
+  })
+  .catch(() => alert("Ошибка загрузки прайса"));
 
-// ===== СУММА ПРОПИСЬЮ (рубли/копейки со склонениями) =====
+// ===== СУММА ПРОПИСЬЮ =====
 function numberToText(num) {
   const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
   const onesFemale = ["", "одна", "две"];
-  const teens = ["десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"];
-  const tens = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"];
-  const hundreds = ["", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"];
+  const teens = ["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
+  const tens = ["","","двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
+  const hundreds = ["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
 
   function plural(n, one, two, five) {
     n = Math.abs(n) % 100;
@@ -44,11 +48,8 @@ function numberToText(num) {
     }
 
     if (n > 0) {
-      if (female && n <= 2) {
-        str += onesFemale[n] + " ";
-      } else {
-        str += ones[n] + " ";
-      }
+      if (female && n <= 2) str += onesFemale[n] + " ";
+      else str += ones[n] + " ";
     }
 
     return str;
@@ -59,9 +60,7 @@ function numberToText(num) {
 
   let result = "";
 
-  if (rub === 0) {
-    result = "ноль ";
-  }
+  if (rub === 0) result = "ноль ";
 
   if (rub >= 1000) {
     let thousands = Math.floor(rub / 1000);
@@ -80,9 +79,9 @@ function numberToText(num) {
   return result.trim();
 }
 
-// поиск
-function searchProduct() {
-  const value = document.getElementById("search").value.toLowerCase();
+// 🔍 поиск
+document.getElementById("search").addEventListener("input", function () {
+  const value = this.value.toLowerCase();
   const box = document.getElementById("suggestions");
 
   if (!value) {
@@ -90,24 +89,23 @@ function searchProduct() {
     return;
   }
 
-  const results = products.filter(p =>
-    String(p["Артикул"] || "").toLowerCase().includes(value)
-  ).slice(0, 5);
+  const results = products
+    .filter(p => String(p["Артикул"] || "").toLowerCase().includes(value))
+    .slice(0, 5);
 
   box.innerHTML = results.map(p => `
-    <div onclick="selectProduct(\`${p["Артикул"]}\`, ${p["Цена"]})"
-         style="padding:8px;border:1px solid #ccc;background:white;cursor:pointer;">
+    <div onclick="selectProduct('${p["Артикул"]}', ${p["Цена"]})">
       ${p["Артикул"]} (${p["Цена"]} ₽)
     </div>
   `).join("");
-}
+});
 
 // выбор
-function selectProduct(article, price) {
+window.selectProduct = function(article, price) {
   document.getElementById("search").value = article;
   document.getElementById("price").value = price;
   document.getElementById("suggestions").innerHTML = "";
-}
+};
 
 // ENTER
 document.getElementById("search").addEventListener("keydown", function(e) {
@@ -126,8 +124,8 @@ document.getElementById("qty").addEventListener("keydown", function(e) {
   }
 });
 
-// добавить
-function addItem() {
+// ➕ добавить
+window.addItem = function() {
   const name = document.getElementById("search").value;
   let price = Number(document.getElementById("price").value);
   const qty = Number(document.getElementById("qty").value) || 1;
@@ -143,9 +141,9 @@ function addItem() {
 
   render();
   document.getElementById("search").focus();
-}
+};
 
-// отрисовка
+// 🔄 отрисовка
 function render() {
   const box = document.getElementById("order");
   box.innerHTML = "";
@@ -172,14 +170,15 @@ function render() {
   document.getElementById("total").innerText = "Итого: " + total + " ₽";
 }
 
-// очистка
-function clearOrder() {
+// 🧹 очистка
+window.clearOrder = function() {
   order = [];
   render();
-}
+};
 
-// печать (10 позиций на накладную, 2 копии на лист)
-function printOrder() {
+// 🖨 ПЕЧАТЬ (ТВОЙ БЛАНК — РАБОТАЕТ)
+window.printOrder = function() {
+
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;
   const number = document.getElementById("invoiceNumber").value || "";
@@ -273,52 +272,50 @@ function printOrder() {
     <style>
       @page { margin: 0; }
 
-      @media print {
-        body { margin:0; }
+      body { font-family: Arial; }
 
-        .page {
-          height: 277mm;
-          padding: 10mm;
-          box-sizing: border-box;
-          page-break-after: always;
-        }
+      .page {
+        height: 277mm;
+        padding: 10mm;
+        box-sizing: border-box;
+        page-break-after: always;
+      }
 
-        .doc {
-          height: 135mm;
-        }
+      .doc {
+        height: 135mm;
+      }
 
-        table {
-          width:100%;
-          border-collapse:collapse;
-          border:2px solid black;
-          font-size:12px;
-        }
+      table {
+        width:100%;
+        border-collapse:collapse;
+        border:2px solid black;
+        font-size:12px;
+      }
 
-        th,td {
-          border:1px solid black;
-          padding:5px;
-          text-align:center;
-        }
+      th,td {
+        border:1px solid black;
+        padding:5px;
+        text-align:center;
+      }
 
-        .sign {
-          margin-top:15px;
-          display:flex;
-          justify-content:space-between;
-        }
+      .sign {
+        margin-top:15px;
+        display:flex;
+        justify-content:space-between;
+      }
 
-        h2 {
-          text-align:center;
-        }
+      h2 {
+        text-align:center;
+      }
 
-        .date {
-          text-align:right;
-        }
+      .date {
+        text-align:right;
+      }
 
-        .cut {
-          height:5mm;
-          border-top:2px dashed black;
-          margin:5mm 0;
-        }
+      .cut {
+        height:5mm;
+        border-top:2px dashed black;
+        margin:5mm 0;
       }
     </style>
   </head>
@@ -330,7 +327,19 @@ function printOrder() {
   `;
 
   const win = window.open("", "_blank");
+
+  if (!win) {
+    alert("Разреши всплывающие окна");
+    return;
+  }
+
+  win.document.open();
   win.document.write(html);
   win.document.close();
-  win.print();
-}
+
+  setTimeout(() => {
+    win.print();
+  }, 300);
+};
+
+});

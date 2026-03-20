@@ -1,72 +1,122 @@
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: Arial, sans-serif;
-  background: #f3f3f3;
+  padding: 12px;
+  background: #f5f5f5;
+  max-width: 500px;
+  margin: auto;
 }
 
-.container {
-  width: 100%;
-  max-width: 100%;
-  min-height: 100vh;
-  padding: 16px;
-  margin: 0;
-}
-
+/* Заголовки */
 h2 {
-  font-size: 16px;
-  margin: 14px 0 8px;
+  font-size: 18px;
+  margin-top: 18px;
+  margin-bottom: 5px;
 }
 
-input,
-select,
+/* Поля */
+input, select {
+  width: 100%;
+  padding: 14px;
+  margin: 6px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+/* Подсказка */
+small {
+  display: block;
+  margin-bottom: 6px;
+  color: #777;
+  font-size: 13px;
+}
+
+/* Кнопки */
 button {
   width: 100%;
-  min-height: 48px;
-  margin-bottom: 12px;
-  padding: 12px 14px;
+  padding: 16px;
+  margin-top: 10px;
+  background: black;
+  color: white;
+  border: none;
   font-size: 16px;
   border-radius: 6px;
-}
-
-input,
-select {
-  border: 1px solid #dcdcdc;
-  background: #fff;
-}
-
-button {
-  border: none;
-  background: #000;
-  color: #fff;
   cursor: pointer;
 }
 
-button:active {
-  transform: scale(0.99);
+/* Список товаров */
+.item {
+  background: white;
+  padding: 10px;
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-radius: 6px;
 }
 
-.hint {
-  font-size: 12px;
-  color: #777;
-  margin-top: -6px;
-  margin-bottom: 10px;
+/* Поля внутри строки */
+.item input {
+  width: 70px;
+  padding: 8px;
+  font-size: 14px;
 }
 
-.order-block {
-  margin: 10px 0 18px;
+/* Цена */
+.item b {
+  font-size: 14px;
 }
 
-.total {
+/* Кнопка удалить */
+.item button {
+  background: #e53935;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+/* Подсказки поиска */
+#suggestions {
+  position: relative;
+  z-index: 5;
+}
+
+#suggestions div {
+  font-size: 16px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+#suggestions div:hover {
+  background: #eee;
+}
+
+/* Итого */
+#total {
   font-size: 18px;
-  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Адаптив */
+@media (max-width: 400px) {
+  body {
+    padding: 10px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  button {
+    font-size: 15px;
+    padding: 14px;
+  }
 }
