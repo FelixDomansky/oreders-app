@@ -260,15 +260,16 @@ window.printOrder = function() {
 
   let pages = "";
 
-  chunks.forEach(chunk => {
-    pages += `
-      <div class="page">
-        ${createDoc(chunk)}
-        <div class="cut"></div>
-        ${createDoc(chunk)}
-      </div>
-    `;
-  });
+  chunks.forEach((chunk, index) => {
+  pages += `
+    <div class="page" style="${index !== chunks.length - 1 ? 'page-break-after: always;' : ''}">
+      ${createDoc(chunk)}
+      <div class="cut"></div>
+      ${createDoc(chunk)}
+    </div>
+  `;
+});
+
 
   const html = `
   <html>
@@ -281,7 +282,7 @@ window.printOrder = function() {
         height: 277mm;
         padding: 10mm;
         box-sizing: border-box;
-        page-break-after: always;
+        page-break-after: auto;
       }
 
       .doc {
