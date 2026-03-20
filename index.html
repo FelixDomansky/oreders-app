@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Накладные</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Накладные</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -19,23 +19,24 @@
 </select>
 
 <h2>Номер накладной</h2>
-<input id="invoiceNumber">
+<input id="invoiceNumber" placeholder="Введите номер">
 
 <h2>Добавить товар</h2>
-<input id="search" placeholder="Артикул">
+<input id="search" placeholder="Наименование">
 <input id="price" placeholder="Цена">
-<input id="qty" placeholder="Кол-во" type="number">
+<input id="qty" placeholder="Количество" type="number">
 
-<button onclick="addItem()">Добавить</button>
+<button onclick="addItem()">➕ Добавить</button>
 
 <h2>Заказ</h2>
 <div id="order"></div>
 
 <h3 id="total">Итого: 0 ₽</h3>
 
-<button onclick="printOrder()">Печать</button>
-<button onclick="clearOrder()">Очистить</button>
+<button onclick="printOrder()">🖨 Печать</button>
+<button onclick="clearOrder()">🧹 Очистить</button>
 
 <script src="app.js"></script>
+
 </body>
 </html>
