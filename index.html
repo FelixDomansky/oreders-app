@@ -1,50 +1,40 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Накладные</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Заказ</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <div class="container">
+    <h2>Клиент</h2>
+    <input type="text" placeholder="ФИО / организация (или оставить пустым)" />
 
-<h2>Клиент</h2>
-<input id="name" placeholder="ФИО / организация (или оставить пустым)">
+    <h2>От кого</h2>
+    <select>
+      <option>Обувная фабрика "ЭРА-ПРОФИ"</option>
+    </select>
 
-<h2>От кого</h2>
-<select id="from">
-  <option>Обувная Фабрика "ЭРА-ПРОФИ"</option>
-  <option>ИП Курбатова Л.И</option>
-</select>
+    <h2>Номер накладной</h2>
+    <input type="text" placeholder="Введите номер накладной (или оставить пустым)" />
 
-<h2>Номер накладной</h2>
-<input id="invoiceNumber" placeholder="Введите номер накладной (или оставить пустым)">
+    <h2>Добавить товар</h2>
+    <input type="text" placeholder="Начните вводить артикул или введите свой товар" />
+    <div class="hint">Можно выбрать из базы или ввести вручную</div>
 
-<h2>Добавить товар</h2>
+    <input type="number" placeholder="Цена" />
+    <input type="number" placeholder="Количество" />
 
-<input id="search"
-       placeholder="Начните вводить артикул или введите свой товар"
-       oninput="searchProduct()">
+    <button>Добавить</button>
 
-<small style="color:gray;">
-  Можно выбрать из базы или ввести вручную
-</small>
+    <div class="order-block">
+      <h2>Заказ</h2>
+      <div class="total">Итого: 0 ₽</div>
+    </div>
 
-<div id="suggestions"></div>
-
-<input id="price" placeholder="Цена">
-<input id="qty" type="number" placeholder="Количество">
-
-<button onclick="addItem()">Добавить</button>
-
-<h2>Заказ</h2>
-<div id="order"></div>
-
-<h3 id="total">Итого: 0 ₽</h3>
-
-<button onclick="printOrder()">Печать</button>
-<button onclick="clearOrder()">Очистить</button>
-
-<script src="app.js"></script>
+    <button>Печать</button>
+    <button>Очистить</button>
+  </div>
 </body>
 </html>
