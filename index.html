@@ -5,41 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Заказы</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h3>Загрузка прайса</h3>
-<input type="file" id="fileInput">
+<h2>Клиент</h2>
+<input id="name" placeholder="Имя / организация">
 
-<h3>Клиент</h3>
-<input id="name" placeholder="Кому">
-
-<h3>От кого</h3>
+<h2>От кого</h2>
 <select id="from">
   <option>Обувная Фабрика "ЭРА-ПРОФИ"</option>
   <option>ИП Курбатова Л.И</option>
 </select>
 
-<h3>Номер накладной</h3>
-<input id="invoiceNumber" placeholder="Например 001">
+<h2>Номер накладной (необязательно)</h2>
+<input id="invoiceNumber" placeholder="Автоматически">
 
-<h3>Добавить товар</h3>
-<input id="search" placeholder="Артикул (можно вручную)">
+<h2>Добавить товар</h2>
+<input id="search" placeholder="Артикул">
 <input id="price" placeholder="Цена">
 <input id="qty" placeholder="Количество" type="number">
 
 <button onclick="addItem()">➕ Добавить</button>
 
-<h3>Заказ</h3>
+<h2>Заказ</h2>
 <div id="order"></div>
 
 <h3 id="total">Итого: 0 ₽</h3>
 
-<button onclick="saveOrder()">💾 Сохранить</button>
 <button onclick="printOrder()">🖨 Печать накладной</button>
 <button onclick="clearOrder()">🧹 Очистить</button>
 

@@ -1,43 +1,5 @@
-let products = [];
 let order = [];
 
-// Excel загрузка
-document.getElementById("fileInput").addEventListener("change", function(e) {
-  const file = e.target.files[0];
-  const reader = new FileReader();
-
-  reader.onload = function(evt) {
-    const data = new Uint8Array(evt.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet);
-
-    products = json.map(row => ({
-      name: String(row["Артикул"]).trim(),
-      price: Number(row["Цена"])
-    }));
-
-    alert("Прайс загружен");
-  };
-
-  reader.readAsArrayBuffer(file);
-});
-
-// автоподстановка цены
-document.getElementById("search").addEventListener("input", function () {
-  const val = this.value.toLowerCase();
-
-  const found = products.find(p =>
-    p.name.toLowerCase() === val
-  );
-
-  if (found) {
-    document.getElementById("price").value = found.price;
-  }
-});
-
-// добавить товар
 function addItem() {
   const name = document.getElementById("search").value;
   const price = Number(document.getElementById("price").value);
@@ -54,7 +16,6 @@ function addItem() {
   render();
 }
 
-// рендер
 function render() {
   const box = document.getElementById("order");
   box.innerHTML = "";
@@ -86,188 +47,99 @@ function clearOrder() {
   render();
 }
 
-// ПЕЧАТЬ С ЧЁТКИМИ ГРАНИЦАМИ
+function sendToCloud(total) {
+  return fetch("https://script.google.com/macros/s/AKfycbwEH-i26FXXk2BYMjO89Oct4GMEwsOL_REuue168DwAjONqOmNbYKbx1RWu2F2x7qYOqw/exec", {
+    method: "POST",
+    body: JSON.stringify({
+      key: "MY_SECRET_123",
+      name: document.getElementById("name").value,
+      from: document.getElementById("from").value,
+      items: order,
+      total: total
+    })
+  });
+}
+
 function printOrder() {
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;
   let invoice = document.getElementById("invoiceNumber").value || "____";
 
-  function generateDoc(items) {
-    let rows = "";
-    let total = 0;
+  let rows = "";
+  let total = 0;
 
-    items.forEach((i, index) => {
-      total += i.price * i.qty;
+  order.forEach((i, index) => {
+    total += i.price * i.qty;
 
-      rows += `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${i.name}</td>
-          <td>шт</td>
-          <td>${i.qty}</td>
-          <td>${i.price}</td>
-          <td>${i.price * i.qty}</td>
-        </tr>
-      `;
-    });
+    rows += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${i.name}</td>
+        <td>шт</td>
+        <td>${i.qty}</td>
+        <td>${i.price}</td>
+        <td>${i.price * i.qty}</td>
+      </tr>
+    `;
+  });
 
+  for (let i = order.length; i < 8; i++) {
+    rows += `<tr><td>${i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  }
+
+  function doc() {
     return `
-      <div class="doc">
+      <div style="height:48%;">
+        <div style="text-align:right;">от «__» __________ 2026 г.</div>
 
-        <div class="date">
-          от «__» __________ 2026 г.
-        </div>
-
-        <h2>НАКЛАДНАЯ № ${invoice}</h2>
+        <h2 style="text-align:center;">НАКЛАДНАЯ № ${invoice}</h2>
 
         <div><b>Кому:</b> ${name}</div>
         <div><b>От кого:</b> ${from}</div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>№</th>
-              <th>Наименование</th>
-              <th>Ед</th>
-              <th>Кол-во</th>
-              <th>Цена</th>
-              <th>Сумма</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
+        <table style="width:100%; border-collapse:collapse; border:2px solid black;">
+          <tr>
+            <th>№</th>
+            <th>Наименование</th>
+            <th>Ед</th>
+            <th>Кол-во</th>
+            <th>Цена</th>
+            <th>Сумма</th>
+          </tr>
+
+          ${rows}
+
+          <tr>
+            <td colspan="5" style="text-align:right;"><b>Итого:</b></td>
+            <td><b>${total} ₽</b></td>
+          </tr>
         </table>
 
-        <div class="footer">
-          <div><b>Итого:</b> ${total} ₽</div>
-          <div>В том числе НДС ( )%</div>
+        <div style="margin-top:30px; display:flex; justify-content:space-between;">
+          <div>Сдал: _____________</div>
+          <div>Принял: _____________</div>
         </div>
-
-        <div class="sign">
-          <div>Сдал: _____________ /_____________/</div>
-          <div>Принял: _____________ /_____________/</div>
-        </div>
-
-      </div>
-    `;
-  }
-
-  // 🔥 динамический расчет строк
-  function splitOrder() {
-    const approxRowsPerDoc = 8; // оптимум под A4 (не ломается)
-    let chunks = [];
-
-    for (let i = 0; i < order.length; i += approxRowsPerDoc) {
-      chunks.push(order.slice(i, i + approxRowsPerDoc));
-    }
-
-    if (chunks.length === 0) chunks = [[]];
-
-    return chunks;
-  }
-
-  const chunks = splitOrder();
-
-  let pagesHTML = "";
-
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-
-    pagesHTML += `
-      <div class="sheet">
-
-        ${generateDoc(chunk)}
-
-        <div class="cut-line"></div>
-
-        ${generateDoc(chunk)}
-
       </div>
     `;
   }
 
   const html = `
   <html>
-  <head>
-    <style>
-      body {
-        font-family: "Times New Roman";
-        margin: 0;
-      }
-
-      .sheet {
-        width: 210mm;
-        height: 297mm;
-        padding: 10mm;
-        box-sizing: border-box;
-        page-break-after: always;
-      }
-
-      .doc {
-        height: 48%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-
-      h2 {
-        text-align: center;
-        margin: 5px 0;
-      }
-
-      .date {
-        text-align: right;
-        font-size: 14px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 2px solid black;
-        margin-top: 5px;
-      }
-
-      th, td {
-        border: 1px solid black;
-        padding: 3px;
-        font-size: 13px;
-        text-align: center;
-      }
-
-      .footer {
-        margin-top: 5px;
-        text-align: right;
-        font-size: 14px;
-      }
-
-      .sign {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-        font-size: 14px;
-      }
-
-      .cut-line {
-        border-top: 2px dashed black;
-        margin: 8px 0;
-      }
-
-      @media print {
-        body {
-          margin: 0;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    ${pagesHTML}
+  <body style="font-family:Times New Roman; padding:20px;">
+    ${doc()}
+    <hr style="border-top:2px dashed black;">
+    ${doc()}
   </body>
   </html>
   `;
 
   const win = window.open("");
   win.document.write(html);
-  win.print();
+
+  sendToCloud(total)
+    .then(() => win.print())
+    .catch(() => {
+      alert("Ошибка облака");
+      win.print();
+    });
 }

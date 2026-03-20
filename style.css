@@ -18,6 +18,7 @@ button {
   background: black;
   color: white;
   border: none;
+  font-size: 16px;
 }
 
 .item {
