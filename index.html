@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Накладные</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -15,7 +14,6 @@
 <h2>От кого</h2>
 <select id="from">
   <option>Обувная Фабрика "ЭРА-ПРОФИ"</option>
-  <option>ИП Курбатова Л.И</option>
 </select>
 
 <h2>Номер накладной</h2>
@@ -27,24 +25,24 @@
        placeholder="Начните вводить артикул или введите свой товар"
        oninput="searchProduct()">
 
-<small style="color:gray; display:block; margin-bottom:5px;">
+<small style="color:gray;">
   Можно выбрать из базы или ввести вручную
 </small>
 
 <div id="suggestions"></div>
 
 <input id="price" placeholder="Цена">
-<input id="qty" placeholder="Количество" type="number">
+<input id="qty" type="number" placeholder="Количество">
 
-<button onclick="addItem()">➕ Добавить</button>
+<button onclick="addItem()">Добавить</button>
 
 <h2>Заказ</h2>
 <div id="order"></div>
 
 <h3 id="total">Итого: 0 ₽</h3>
 
-<button onclick="printOrder()">🖨 Печать</button>
-<button onclick="clearOrder()">🧹 Очистить</button>
+<button onclick="printOrder()">Печать</button>
+<button onclick="clearOrder()">Очистить</button>
 
 <script src="app.js"></script>
 
