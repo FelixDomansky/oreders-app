@@ -3,8 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
 let products = [];
 let order = [];
 
-// 🔥 загрузка прайса (исправлен URL)
-fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/%D0%9B%D0%B8%D1%81%D1%821?t=" + Date.now())
+// 🔥 загрузка из JSON (вместо Google Sheets)
+fetch("products.json?t=" + Date.now())
   .then(res => res.json())
   .then(data => {
     products = data;
@@ -13,7 +13,7 @@ fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/%D0
   .catch(() => alert("Ошибка загрузки прайса"));
 
 
-// ===== СУММА ПРОПИСЬЮ =====
+// ===== СУММА ПРОПИСЬЮ (НЕ ТРОГАЛ) =====
 function numberToText(num) {
   const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
   const onesFemale = ["", "одна", "две"];
@@ -81,7 +81,7 @@ function numberToText(num) {
 }
 
 
-// 🔍 поиск (УЛУЧШЕН, но логика та же)
+// 🔍 поиск (чуть улучшен, но логика та же)
 document.getElementById("search").addEventListener("input", function () {
   const value = this.value.toLowerCase().replace(/\s/g, "").replace(/\./g, "");
   const box = document.getElementById("suggestions");
