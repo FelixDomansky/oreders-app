@@ -3,31 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <title>Накладные</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- PDF библиотека -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
 
-<h2>Клиент</h2>
+<h3>Клиент</h3>
 <input id="name" placeholder="ФИО / организация (или оставить пустым)">
 
-<h2>От кого</h2>
+<h3>От кого</h3>
 <select id="from">
   <option>Обувная Фабрика "ЭРА-ПРОФИ"</option>
   <option>ИП Курбатова Л.И</option>
 </select>
 
-<h2>Номер накладной</h2>
-<input id="invoiceNumber" placeholder="Введите номер накладной (или оставить пустым)">
+<h3>Номер накладной</h3>
+<input id="invoiceNumber" placeholder="Введите номер (необязательно)">
 
-<h2>Добавить товар</h2>
+<h3>Добавить товар</h3>
 
-<input id="search" placeholder="Начните вводить артикул или введите свой товар">
-<small>Можно выбрать из базы или ввести вручную</small>
-
+<input id="search" placeholder="Начните вводить артикул или введите вручную">
 <div id="suggestions"></div>
 
 <input id="price" placeholder="Цена">
@@ -35,7 +36,7 @@
 
 <button onclick="addItem()">Добавить</button>
 
-<h2>Заказ</h2>
+<h3>Заказ</h3>
 <div id="order"></div>
 
 <h3 id="total">Итого: 0 ₽</h3>
@@ -44,8 +45,7 @@
 <button onclick="downloadPDF()">Скачать PDF</button>
 <button onclick="clearOrder()">Очистить</button>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="app.js" defer></script>
+<script src="app.js"></script>
 
 </body>
 </html>

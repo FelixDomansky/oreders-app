@@ -8,7 +8,6 @@ fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Л�
   .then(res => res.json())
   .then(data => {
     products = data;
-    console.log("Прайс загружен:", products);
   })
   .catch(() => alert("Ошибка загрузки прайса"));
 
@@ -86,10 +85,7 @@ document.getElementById("search").addEventListener("input", function () {
   const value = this.value.toLowerCase();
   const box = document.getElementById("suggestions");
 
-  if (!value) {
-    box.innerHTML = "";
-    return;
-  }
+  if (!value) return box.innerHTML = "";
 
   const results = products
     .filter(p => String(p["Артикул"] || "").toLowerCase().includes(value))
@@ -102,7 +98,6 @@ document.getElementById("search").addEventListener("input", function () {
   `).join("");
 });
 
-// выбор
 window.selectProduct = function(article, price) {
   document.getElementById("search").value = article;
   document.getElementById("price").value = price;
@@ -143,7 +138,13 @@ window.addItem = function() {
   document.getElementById("qty").value = "";
 
   render();
-  document.getElementById("search").focus();
+};
+
+
+// ❌ удаление
+window.removeItem = function(index) {
+  order.splice(index, 1);
+  render();
 };
 
 
@@ -165,7 +166,7 @@ function render() {
       <input value="${i.qty}" type="number" onchange="order[${index}].qty=this.value; render();">
       <input value="${i.price}" type="number" onchange="order[${index}].price=this.value; render();">
       <b>${i.price * i.qty} ₽</b>
-      <button onclick="order.splice(${index},1); render();">Удалить</button>
+      <button onclick="removeItem(${index})">Удалить</button>
     `;
 
     box.appendChild(div);
@@ -182,26 +183,26 @@ window.clearOrder = function() {
 };
 
 
-// 🖨 ПЕЧАТЬ (КРАСИВЫЙ БЛАНК)
-window.printOrder = function() {
+// 🔥 ОБЩИЙ HTML ДЛЯ ПЕЧАТИ И PDF
+function getPrintHTML() {
 
   const name = document.getElementById("name").value;
   const from = document.getElementById("from").value;
   const number = document.getElementById("invoiceNumber").value || "";
 
-  const ITEMS_PER_DOC = 10;
+  const ITEMS = 10;
 
-  function chunkArray(arr, size) {
-    let result = [];
-    for (let i = 0; i < arr.length; i += size) {
-      result.push(arr.slice(i, i + size));
+  function chunk(arr) {
+    let r = [];
+    for (let i = 0; i < arr.length; i += ITEMS) {
+      r.push(arr.slice(i, i + ITEMS));
     }
-    return result;
+    return r;
   }
 
-  const chunks = chunkArray(order, ITEMS_PER_DOC);
+  const chunks = chunk(order);
 
-  function createDoc(items) {
+  function doc(items) {
     let rows = "";
     let total = 0;
 
@@ -223,7 +224,6 @@ window.printOrder = function() {
     return `
       <div class="doc">
         <div class="date">от «__» __________ 2026 г.</div>
-
         <h2>НАКЛАДНАЯ № ${number || "________"}</h2>
 
         <div><b>Кому:</b> ${name || ""}</div>
@@ -260,30 +260,30 @@ window.printOrder = function() {
 
   let pages = "";
 
-  chunks.forEach((chunk, index) => {
-  pages += `
-    <div class="page" style="${index !== chunks.length - 1 ? 'page-break-after: always;' : ''}">
-      ${createDoc(chunk)}
-      <div class="cut"></div>
-      ${createDoc(chunk)}
-    </div>
-  `;
-});
+  chunks.forEach(chunk => {
+    pages += `
+      <div class="page">
+        ${doc(chunk)}
+        <div class="cut"></div>
+        ${doc(chunk)}
+      </div>
+    `;
+  });
 
-
-  const html = `
+  return `
   <html>
   <head>
     <style>
-      @page { margin: 0; }
-      body { font-family: Arial; }
+      @page { size: A4; margin: 0; }
+
+      body { font-family: Arial; margin: 0; }
 
       .page {
-  width: 210mm;
-  height: 290mm; /* меньше A4, чтобы не было переполнения */
-  padding: 8mm;
-  box-sizing: border-box;
-}
+        width: 210mm;
+        height: 297mm;
+        padding: 10mm;
+        box-sizing: border-box;
+      }
 
       .doc {
         height: 135mm;
@@ -308,13 +308,7 @@ window.printOrder = function() {
         justify-content:space-between;
       }
 
-      h2 {
-        text-align:center;
-      }
-
-      .date {
-        text-align:right;
-      }
+      .date { text-align:right; }
 
       .cut {
         height:5mm;
@@ -323,30 +317,68 @@ window.printOrder = function() {
       }
     </style>
   </head>
-
   <body>
     ${pages}
   </body>
   </html>
   `;
+}
 
+
+// 🖨 печать
+window.printOrder = function() {
   const win = window.open("", "_blank");
-
-  if (!win) {
-    alert("Разреши всплывающие окна");
-    return;
-  }
-
-  win.document.write(html);
+  win.document.write(getPrintHTML());
   win.document.close();
-
   setTimeout(() => win.print(), 300);
 };
 
 
-// 📄 PDF (ТОТ ЖЕ БЛАНК)
+// 📄 PDF (РАБОЧИЙ ФИКС)
 window.downloadPDF = function() {
-  window.printOrder(); // делаем через печать → сохранить как PDF
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = getPrintHTML();
+
+  const content = wrapper;
+
+  html2pdf()
+    .set({
+      margin: 0,
+      filename: 'nakladnaya.pdf',
+
+      html2canvas: {
+        scale: 2
+      },
+
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4'
+      },
+
+      pagebreak: {
+        mode: ['css', 'legacy']
+      }
+    })
+    .from(content)
+    .toPdf()
+    .get('pdf')
+    .then(function (pdf) {
+
+      const pageCount = pdf.internal.getNumberOfPages();
+
+      // 🔥 Удаляем последний пустой лист
+      if (pageCount > 1) {
+        const lastPage = pdf.internal.pages[pageCount];
+
+        // если страница почти пустая — удаляем
+        if (!lastPage || lastPage.length < 20) {
+          pdf.deletePage(pageCount);
+        }
+      }
+
+    })
+    .save();
 };
 
 });
