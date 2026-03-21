@@ -2,42 +2,49 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let products = [];
 let order = [];
-let isLoaded = false;
 
 // 🔥 КЭШ
-const CACHE_KEY = "products_cache";
+const CACHE_KEY = "products_safe_v1";
 
-function loadFromCache() {
-  const cached = localStorage.getItem(CACHE_KEY);
-  if (cached) {
-    products = JSON.parse(cached);
-    isLoaded = true;
-    console.log("Прайс загружен из кэша");
-  }
+// 👉 очистка данных
+function normalizeData(data) {
+  return data.map(p => ({
+    "Артикул": String(p["Артикул"] || "").trim(),
+    "Цена": Number(p["Цена"] || 0)
+  }));
 }
 
-function saveToCache(data) {
+// 👉 загрузка кэша
+function loadCache() {
+  try {
+    const cache = localStorage.getItem(CACHE_KEY);
+    if (cache) {
+      products = JSON.parse(cache);
+      console.log("📦 Прайс из кэша");
+    }
+  } catch {}
+}
+
+// 👉 сохранение кэша
+function saveCache(data) {
   localStorage.setItem(CACHE_KEY, JSON.stringify(data));
 }
 
-// сначала грузим кэш
-loadFromCache();
+// сначала кэш
+loadCache();
 
 // 🔥 загрузка прайса
 fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1?t=" + Date.now())
   .then(res => res.json())
   .then(data => {
-    products = data;
-    isLoaded = true;
-    saveToCache(data);
-    console.log("Прайс обновлён с сервера");
+    if (Array.isArray(data) && data.length) {
+      products = normalizeData(data);
+      saveCache(products);
+      console.log("🔥 Прайс обновлён");
+    }
   })
   .catch(() => {
-    if (!products.length) {
-      alert("Нет интернета и кэша 😬");
-    } else {
-      console.log("Работаем из кэша");
-    }
+    if (!products.length) alert("Ошибка загрузки прайса");
   });
 
 
@@ -109,17 +116,15 @@ function numberToText(num) {
 }
 
 
-// 🔍 поиск
+// 🔍 поиск (фикс пробелов)
 document.getElementById("search").addEventListener("input", function () {
-  if (!isLoaded) return;
-
-  const value = this.value.toLowerCase();
+  const value = this.value.toLowerCase().trim();
   const box = document.getElementById("suggestions");
 
   if (!value) return box.innerHTML = "";
 
   const results = products
-    .filter(p => String(p["Артикул"] || "").toLowerCase().includes(value))
+    .filter(p => p["Артикул"].toLowerCase().includes(value))
     .slice(0, 5);
 
   box.innerHTML = results.map(p => `
@@ -154,18 +159,20 @@ document.getElementById("qty").addEventListener("keydown", function(e) {
 });
 
 
-// ➕ добавить
+// ➕ добавить (с автопоиском цены)
 window.addItem = function() {
-  if (!isLoaded) {
-    alert("Прайс ещё загружается");
-    return;
-  }
-
-  const name = document.getElementById("search").value;
+  const name = document.getElementById("search").value.trim();
   let price = Number(document.getElementById("price").value);
   const qty = Number(document.getElementById("qty").value) || 1;
 
   if (!name) return;
+
+  if (!price && products.length) {
+    const found = products.find(p =>
+      p["Артикул"].toLowerCase() === name.toLowerCase()
+    );
+    if (found) price = found["Цена"];
+  }
 
   order.push({ name, price: price || 0, qty });
 
@@ -219,7 +226,7 @@ window.clearOrder = function() {
 };
 
 
-// 🔥 HTML для печати
+// 🔥 ПЕЧАТЬ — БЕЗ ИЗМЕНЕНИЙ (как у тебя было)
 function getPrintHTML() {
 
   const name = document.getElementById("name").value;
