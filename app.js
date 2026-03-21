@@ -336,49 +336,13 @@ window.printOrder = function() {
 
 // 📄 PDF (РАБОЧИЙ ФИКС)
 window.downloadPDF = function() {
+  const win = window.open("", "_blank");
+  win.document.write(getPrintHTML());
+  win.document.close();
 
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = getPrintHTML();
-
-  const content = wrapper;
-
-  html2pdf()
-    .set({
-      margin: 0,
-      filename: 'nakladnaya.pdf',
-
-      html2canvas: {
-        scale: 2
-      },
-
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4'
-      },
-
-      pagebreak: {
-        mode: ['css', 'legacy']
-      }
-    })
-    .from(content)
-    .toPdf()
-    .get('pdf')
-    .then(function (pdf) {
-
-      const pageCount = pdf.internal.getNumberOfPages();
-
-      // 🔥 Удаляем последний пустой лист
-      if (pageCount > 1) {
-        const lastPage = pdf.internal.pages[pageCount];
-
-        // если страница почти пустая — удаляем
-        if (!lastPage || lastPage.length < 20) {
-          pdf.deletePage(pageCount);
-        }
-      }
-
-    })
-    .save();
+  setTimeout(() => {
+    win.print();
+  }, 300);
 };
 
 });
