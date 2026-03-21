@@ -3,49 +3,17 @@ document.addEventListener("DOMContentLoaded", function () {
 let products = [];
 let order = [];
 
-// 🔥 КЭШ
-const CACHE_KEY = "products_safe_v1";
-
-// 👉 очистка данных
-function normalizeData(data) {
-  return data.map(p => ({
-    "Артикул": String(p["Артикул"] || "").trim(),
-    "Цена": Number(p["Цена"] || 0)
-  }));
-}
-
-// 👉 загрузка кэша
-function loadCache() {
-  try {
-    const cache = localStorage.getItem(CACHE_KEY);
-    if (cache) {
-      products = JSON.parse(cache);
-      console.log("📦 Прайс из кэша");
-    }
-  } catch {}
-}
-
-// 👉 сохранение кэша
-function saveCache(data) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-}
-
-// сначала кэш
-loadCache();
-
 // 🔥 загрузка прайса
 fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1?t=" + Date.now())
   .then(res => res.json())
   .then(data => {
-    if (Array.isArray(data) && data.length) {
-      products = normalizeData(data);
-      saveCache(products);
-      console.log("🔥 Прайс обновлён");
-    }
+    products = data.map(p => ({
+      "Артикул": String(p["Артикул"] || "").trim(),
+      "Цена": Number(p["Цена"] || 0)
+    }));
+    console.log("Прайс загружен:", products);
   })
-  .catch(() => {
-    if (!products.length) alert("Ошибка загрузки прайса");
-  });
+  .catch(() => alert("Ошибка загрузки прайса"));
 
 
 // ===== СУММА ПРОПИСЬЮ =====
@@ -116,22 +84,31 @@ function numberToText(num) {
 }
 
 
-// 🔍 поиск (фикс пробелов)
+// 🔍 ПОИСК (фикс)
 document.getElementById("search").addEventListener("input", function () {
-  const value = this.value.toLowerCase().trim();
+  const raw = this.value.toLowerCase();
+  const value = raw.replace(/\s/g, "").replace(/\./g, "");
   const box = document.getElementById("suggestions");
 
   if (!value) return box.innerHTML = "";
 
   const results = products
-    .filter(p => p["Артикул"].toLowerCase().includes(value))
+    .filter(p => {
+      const art = p["Артикул"]
+        .toLowerCase()
+        .replace(/\s/g, "")
+        .replace(/\./g, "");
+      return art.includes(value);
+    })
     .slice(0, 5);
 
-  box.innerHTML = results.map(p => `
-    <div onclick="selectProduct('${p["Артикул"]}', ${p["Цена"]})">
-      ${p["Артикул"]} (${p["Цена"]} ₽)
-    </div>
-  `).join("");
+  box.innerHTML = results.length
+    ? results.map(p => `
+        <div onclick="selectProduct('${p["Артикул"]}', ${p["Цена"]})">
+          ${p["Артикул"]} (${p["Цена"]} ₽)
+        </div>
+      `).join("")
+    : "<div>Ничего не найдено</div>";
 });
 
 window.selectProduct = function(article, price) {
@@ -159,20 +136,13 @@ document.getElementById("qty").addEventListener("keydown", function(e) {
 });
 
 
-// ➕ добавить (с автопоиском цены)
+// ➕ добавить
 window.addItem = function() {
   const name = document.getElementById("search").value.trim();
   let price = Number(document.getElementById("price").value);
   const qty = Number(document.getElementById("qty").value) || 1;
 
   if (!name) return;
-
-  if (!price && products.length) {
-    const found = products.find(p =>
-      p["Артикул"].toLowerCase() === name.toLowerCase()
-    );
-    if (found) price = found["Цена"];
-  }
 
   order.push({ name, price: price || 0, qty });
 
@@ -226,7 +196,7 @@ window.clearOrder = function() {
 };
 
 
-// 🔥 ПЕЧАТЬ — БЕЗ ИЗМЕНЕНИЙ (как у тебя было)
+// 🔥 ПЕЧАТЬ (без изменений)
 function getPrintHTML() {
 
   const name = document.getElementById("name").value;
