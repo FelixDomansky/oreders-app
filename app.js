@@ -2,14 +2,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let products = [];
 let order = [];
+let isLoaded = false;
+
+// 🔥 КЭШ
+const CACHE_KEY = "products_cache";
+
+function loadFromCache() {
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    products = JSON.parse(cached);
+    isLoaded = true;
+    console.log("Прайс загружен из кэша");
+  }
+}
+
+function saveToCache(data) {
+  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+}
+
+// сначала грузим кэш
+loadFromCache();
 
 // 🔥 загрузка прайса
-fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1")
+fetch("https://opensheet.elk.sh/166XC1AbpeiyA6Q_Zo0Va_KpEzfzoCNLXlF66-mprS7M/Лист1?t=" + Date.now())
   .then(res => res.json())
   .then(data => {
     products = data;
+    isLoaded = true;
+    saveToCache(data);
+    console.log("Прайс обновлён с сервера");
   })
-  .catch(() => alert("Ошибка загрузки прайса"));
+  .catch(() => {
+    if (!products.length) {
+      alert("Нет интернета и кэша 😬");
+    } else {
+      console.log("Работаем из кэша");
+    }
+  });
 
 
 // ===== СУММА ПРОПИСЬЮ =====
@@ -82,6 +111,8 @@ function numberToText(num) {
 
 // 🔍 поиск
 document.getElementById("search").addEventListener("input", function () {
+  if (!isLoaded) return;
+
   const value = this.value.toLowerCase();
   const box = document.getElementById("suggestions");
 
@@ -125,6 +156,11 @@ document.getElementById("qty").addEventListener("keydown", function(e) {
 
 // ➕ добавить
 window.addItem = function() {
+  if (!isLoaded) {
+    alert("Прайс ещё загружается");
+    return;
+  }
+
   const name = document.getElementById("search").value;
   let price = Number(document.getElementById("price").value);
   const qty = Number(document.getElementById("qty").value) || 1;
@@ -183,7 +219,7 @@ window.clearOrder = function() {
 };
 
 
-// 🔥 ОБЩИЙ HTML ДЛЯ ПЕЧАТИ И PDF
+// 🔥 HTML для печати
 function getPrintHTML() {
 
   const name = document.getElementById("name").value;
@@ -275,7 +311,6 @@ function getPrintHTML() {
   <head>
     <style>
       @page { size: A4; margin: 0; }
-
       body { font-family: Arial; margin: 0; }
 
       .page {
@@ -285,9 +320,7 @@ function getPrintHTML() {
         box-sizing: border-box;
       }
 
-      .doc {
-        height: 135mm;
-      }
+      .doc { height: 135mm; }
 
       table {
         width:100%;
@@ -334,15 +367,12 @@ window.printOrder = function() {
 };
 
 
-// 📄 PDF (РАБОЧИЙ ФИКС)
+// 📄 PDF
 window.downloadPDF = function() {
   const win = window.open("", "_blank");
   win.document.write(getPrintHTML());
   win.document.close();
-
-  setTimeout(() => {
-    win.print();
-  }, 300);
+  setTimeout(() => win.print(), 300);
 };
 
 });
