@@ -279,11 +279,11 @@ window.printOrder = function() {
       body { font-family: Arial; }
 
       .page {
-        height: 277mm;
-        padding: 10mm;
-        box-sizing: border-box;
-        page-break-after: auto;
-      }
+  width: 210mm;
+  height: 290mm; /* меньше A4, чтобы не было переполнения */
+  padding: 8mm;
+  box-sizing: border-box;
+}
 
       .doc {
         height: 135mm;
