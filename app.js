@@ -4,15 +4,41 @@ let products = [];
 let order = [];
 
 // 🔥 загрузка из JSON (локально)
-fetch("products.json?t=" + Date.now())
-  .then(res => res.json())
-  .then(data => {
-    products = data;
-  })
-  .catch((e) => {
-    console.error(e);
-    alert("Ошибка загрузки прайса");
-  });
+function loadProducts() {
+  const CACHE_KEY = "products_cache";
+
+  // 1. пробуем взять из кэша
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    try {
+      products = JSON.parse(cached);
+      console.log("Прайс из кэша:", products);
+    } catch (e) {
+      console.warn("Кэш битый");
+    }
+  }
+
+  // 2. пробуем загрузить свежий
+  fetch("products.json?t=" + Date.now())
+    .then(res => res.json())
+    .then(data => {
+      products = data;
+
+      // сохраняем в кэш
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+
+      console.log("Прайс обновлён:", products);
+    })
+    .catch((e) => {
+      console.warn("Нет интернета, используем кэш");
+      if (!products.length) {
+        alert("Нет интернета и кэш пуст");
+      }
+    });
+}
+
+// запускаем
+loadProducts();
 
 
 // ===== СУММА ПРОПИСЬЮ =====
