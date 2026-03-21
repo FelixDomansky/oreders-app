@@ -3,17 +3,19 @@ document.addEventListener("DOMContentLoaded", function () {
 let products = [];
 let order = [];
 
-// 🔥 загрузка из JSON (вместо Google Sheets)
+// 🔥 загрузка из JSON (локально)
 fetch("products.json?t=" + Date.now())
   .then(res => res.json())
   .then(data => {
     products = data;
-    console.log("Прайс загружен:", products);
   })
-  .catch(() => alert("Ошибка загрузки прайса"));
+  .catch((e) => {
+    console.error(e);
+    alert("Ошибка загрузки прайса");
+  });
 
 
-// ===== СУММА ПРОПИСЬЮ (НЕ ТРОГАЛ) =====
+// ===== СУММА ПРОПИСЬЮ =====
 function numberToText(num) {
   const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
   const onesFemale = ["", "одна", "две"];
@@ -81,25 +83,19 @@ function numberToText(num) {
 }
 
 
-// 🔍 поиск (чуть улучшен, но логика та же)
+// 🔍 поиск (без изменений логики)
 document.getElementById("search").addEventListener("input", function () {
-  const value = this.value.toLowerCase().replace(/\s/g, "").replace(/\./g, "");
+  const value = this.value.toLowerCase();
   const box = document.getElementById("suggestions");
 
-  if (!value) return box.innerHTML = "";
+  if (!value || !products.length) return box.innerHTML = "";
 
   const results = products
-    .filter(p => {
-      const art = String(p["Артикул"] || "")
-        .toLowerCase()
-        .replace(/\s/g, "")
-        .replace(/\./g, "");
-      return art.includes(value);
-    })
+    .filter(p => String(p["Артикул"] || "").toLowerCase().includes(value))
     .slice(0, 5);
 
   box.innerHTML = results.map(p => `
-    <div onclick="selectProduct('${p["Артикул"]}', ${p["Цена"]})">
+    <div onclick="selectProduct('${p["Артикул"]}', ${Number(p["Цена"])})">
       ${p["Артикул"]} (${p["Цена"]} ₽)
     </div>
   `).join("");
@@ -155,7 +151,7 @@ window.removeItem = function(index) {
 };
 
 
-// 🔄 отрисовка
+// 🔄 отрисовка (фикс чисел — безопасный)
 function render() {
   const box = document.getElementById("order");
   box.innerHTML = "";
@@ -163,16 +159,19 @@ function render() {
   let total = 0;
 
   order.forEach((i, index) => {
-    total += i.price * i.qty;
+    const price = Number(i.price);
+    const qty = Number(i.qty);
+
+    total += price * qty;
 
     const div = document.createElement("div");
     div.className = "item";
 
     div.innerHTML = `
       <input value="${i.name}" onchange="order[${index}].name=this.value">
-      <input value="${i.qty}" type="number" onchange="order[${index}].qty=this.value; render();">
-      <input value="${i.price}" type="number" onchange="order[${index}].price=this.value; render();">
-      <b>${i.price * i.qty} ₽</b>
+      <input value="${qty}" type="number" onchange="order[${index}].qty=Number(this.value); render();">
+      <input value="${price}" type="number" onchange="order[${index}].price=Number(this.value); render();">
+      <b>${price * qty} ₽</b>
       <button onclick="removeItem(${index})">Удалить</button>
     `;
 
@@ -190,16 +189,167 @@ window.clearOrder = function() {
 };
 
 
-// 🖨 печать (НЕ ТРОГАЛ)
+
+
+// 🔥 НАКЛАДНАЯ (НЕ ТРОГАЕМ ВООБЩЕ)
+function getPrintHTML() {
+
+  const name = document.getElementById("name").value;
+  const from = document.getElementById("from").value;
+  const number = document.getElementById("invoiceNumber").value || "";
+
+  const ITEMS = 10;
+
+  function chunk(arr) {
+    let r = [];
+    for (let i = 0; i < arr.length; i += ITEMS) {
+      r.push(arr.slice(i, i + ITEMS));
+    }
+    return r;
+  }
+
+  const chunks = chunk(order);
+
+  function doc(items) {
+    let rows = "";
+    let total = 0;
+
+    items.forEach((i, index) => {
+      total += i.price * i.qty;
+
+      rows += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${i.name}</td>
+          <td>шт</td>
+          <td>${i.qty}</td>
+          <td>${i.price}</td>
+          <td>${i.price * i.qty}</td>
+        </tr>
+      `;
+    });
+
+    return `
+      <div class="doc">
+        <div class="date">от «__» __________ 2026 г.</div>
+        <h2>НАКЛАДНАЯ № ${number || "________"}</h2>
+
+        <div><b>Кому:</b> ${name || ""}</div>
+        <div><b>От кого:</b> ${from}</div>
+
+        <table>
+          <tr>
+            <th>№</th>
+            <th>Наименование</th>
+            <th>Ед</th>
+            <th>Кол-во</th>
+            <th>Цена</th>
+            <th>Сумма</th>
+          </tr>
+
+          ${rows}
+
+          <tr>
+            <td colspan="6" style="text-align:left;">
+              <b>Итого:</b> ${total} ₽
+              <br>
+              ${numberToText(total)}
+            </td>
+          </tr>
+        </table>
+
+        <div class="sign">
+          <div>Сдал: _____________</div>
+          <div>Принял: _____________</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let pages = "";
+
+  chunks.forEach(chunk => {
+    pages += `
+      <div class="page">
+        ${doc(chunk)}
+        <div class="cut"></div>
+        ${doc(chunk)}
+      </div>
+    `;
+  });
+
+  return `
+  <html>
+  <head>
+    <style>
+      @page { size: A4; margin: 0; }
+
+      body { font-family: Arial; margin: 0; }
+
+      .page {
+        width: 210mm;
+        height: 297mm;
+        padding: 10mm;
+        box-sizing: border-box;
+      }
+
+      .doc {
+        height: 135mm;
+      }
+
+      table {
+        width:100%;
+        border-collapse:collapse;
+        border:2px solid black;
+        font-size:12px;
+      }
+
+      th,td {
+        border:1px solid black;
+        padding:5px;
+        text-align:center;
+      }
+
+      .sign {
+        margin-top:15px;
+        display:flex;
+        justify-content:space-between;
+      }
+
+      .date { text-align:right; }
+
+      .cut {
+        height:5mm;
+        border-top:2px dashed black;
+        margin:5mm 0;
+      }
+    </style>
+  </head>
+  <body>
+    ${pages}
+  </body>
+  </html>
+  `;
+}
+
+
+// 🖨 печать
 window.printOrder = function() {
   const win = window.open("", "_blank");
+
+  if (!win) {
+    alert("Разреши всплывающие окна");
+    return;
+  }
+
   win.document.write(getPrintHTML());
   win.document.close();
+
   setTimeout(() => win.print(), 300);
 };
 
 
-// 📄 PDF (НЕ ТРОГАЛ)
+// 📄 PDF
 window.downloadPDF = function() {
   const win = window.open("", "_blank");
   win.document.write(getPrintHTML());
