@@ -205,7 +205,7 @@ function getPrintHTML() {
   const from = document.getElementById("from").value;
   const number = document.getElementById("invoiceNumber").value || "";
 
-  const ITEMS = 8;
+  const ITEMS = 7;
 
   function chunk(arr) {
     let r = [];
