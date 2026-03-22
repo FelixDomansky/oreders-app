@@ -7,7 +7,6 @@ let order = [];
 function loadProducts() {
   const CACHE_KEY = "products_cache";
 
-  // 1. пробуем взять из кэша
   const cached = localStorage.getItem(CACHE_KEY);
   if (cached) {
     try {
@@ -18,15 +17,11 @@ function loadProducts() {
     }
   }
 
-  // 2. пробуем загрузить свежий
   fetch("products.json?t=" + Date.now())
     .then(res => res.json())
     .then(data => {
       products = data;
-
-      // сохраняем в кэш
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-
       console.log("Прайс обновлён:", products);
     })
     .catch((e) => {
@@ -37,14 +32,12 @@ function loadProducts() {
     });
 }
 
-// запускаем
 loadProducts();
 
 
-// ===== СУММА ПРОПИСЬЮ =====
+// ===== СУММА ПРОПИСЬЮ (FIXED) =====
 function numberToText(num) {
   const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
-  const onesFemale = ["", "одна", "две"];
   const teens = ["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
   const tens = ["","","двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
   const hundreds = ["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
@@ -77,8 +70,14 @@ function numberToText(num) {
     }
 
     if (n > 0) {
-      if (female && n <= 2) str += onesFemale[n] + " ";
-      else str += ones[n] + " ";
+      // 🔥 фикс undefined
+      if (female) {
+        if (n === 1) str += "одна ";
+        else if (n === 2) str += "две ";
+        else str += ones[n] + " ";
+      } else {
+        str += ones[n] + " ";
+      }
     }
 
     return str;
@@ -109,7 +108,7 @@ function numberToText(num) {
 }
 
 
-// 🔍 поиск (без изменений логики)
+// 🔍 поиск (без изменений)
 document.getElementById("search").addEventListener("input", function () {
   const value = this.value.toLowerCase();
   const box = document.getElementById("suggestions");
@@ -177,7 +176,7 @@ window.removeItem = function(index) {
 };
 
 
-// 🔄 отрисовка (фикс чисел — безопасный)
+// 🔄 отрисовка
 function render() {
   const box = document.getElementById("order");
   box.innerHTML = "";
@@ -216,8 +215,7 @@ window.clearOrder = function() {
 
 
 
-
-// 🔥 НАКЛАДНАЯ (НЕ ТРОГАЕМ ВООБЩЕ)
+// 🔥 НАКЛАДНАЯ
 function getPrintHTML() {
 
   const name = document.getElementById("name").value;
@@ -285,8 +283,23 @@ function getPrintHTML() {
         </table>
 
         <div class="sign">
-          <div>Сдал: _____________</div>
-          <div>Принял: _____________</div>
+          <div class="sign-block">
+            Сдал:
+            <div class="line"></div>
+            <div class="sub">
+              <span>подпись</span>
+              <span>расшифровка подписи</span>
+            </div>
+          </div>
+
+          <div class="sign-block">
+            Принял:
+            <div class="line"></div>
+            <div class="sub">
+              <span>подпись</span>
+              <span>расшифровка подписи</span>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -309,7 +322,6 @@ function getPrintHTML() {
   <head>
     <style>
       @page { size: A4; margin: 0; }
-
       body { font-family: Arial; margin: 0; }
 
       .page {
@@ -340,6 +352,23 @@ function getPrintHTML() {
         margin-top:15px;
         display:flex;
         justify-content:space-between;
+      }
+
+      .sign-block {
+        width:45%;
+        font-size:12px;
+      }
+
+      .line {
+        border-bottom:1px solid black;
+        height:20px;
+        margin-top:5px;
+      }
+
+      .sub {
+        display:flex;
+        justify-content:space-between;
+        font-size:10px;
       }
 
       .date { text-align:right; }
