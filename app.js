@@ -89,12 +89,19 @@ function numberToText(num) {
 
   if (rub === 0) result = "ноль ";
 
-  // 🔥 МИЛЛИОНЫ
-  if (rub >= 1000000) {
-    let millions = Math.floor(rub / 1000000);
-    result += parseHundreds(millions) + plural(millions, "миллион", "миллиона", "миллионов") + " ";
-    rub %= 1000000;
+  // 🔥 МИЛЛИОНЫ (фикс безопасный)
+if (rub >= 1000000) {
+  let millions = Math.floor(rub / 1000000);
+
+  if (millions < 1000) {
+    result += parseHundreds(millions);
+  } else {
+    result += millions + " ";
   }
+
+  result += plural(millions, "миллион", "миллиона", "миллионов") + " ";
+  rub %= 1000000;
+}
 
   // 🔥 ТЫСЯЧИ
   if (rub >= 1000) {
