@@ -70,7 +70,6 @@ function numberToText(num) {
     }
 
     if (n > 0) {
-      // 🔥 фикс undefined
       if (female) {
         if (n === 1) str += "одна ";
         else if (n === 2) str += "две ";
@@ -90,13 +89,21 @@ function numberToText(num) {
 
   if (rub === 0) result = "ноль ";
 
+  // 🔥 МИЛЛИОНЫ
+  if (rub >= 1000000) {
+    let millions = Math.floor(rub / 1000000);
+    result += parseHundreds(millions) + plural(millions, "миллион", "миллиона", "миллионов") + " ";
+    rub %= 1000000;
+  }
+
+  // 🔥 ТЫСЯЧИ
   if (rub >= 1000) {
     let thousands = Math.floor(rub / 1000);
-    result += parseHundreds(thousands, true);
-    result += plural(thousands, "тысяча", "тысячи", "тысяч") + " ";
+    result += parseHundreds(thousands, true) + plural(thousands, "тысяча", "тысячи", "тысяч") + " ";
     rub %= 1000;
   }
 
+  // 🔥 ОСТАТОК
   result += parseHundreds(rub);
   result += plural(Math.floor(num), "рубль", "рубля", "рублей");
 
@@ -106,7 +113,6 @@ function numberToText(num) {
 
   return result.trim();
 }
-
 
 // 🔍 поиск (без изменений)
 document.getElementById("search").addEventListener("input", function () {
