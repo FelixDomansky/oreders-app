@@ -235,8 +235,8 @@ function getPrintHTML() {
   const from = document.getElementById("from").value;
   const number = document.getElementById("invoiceNumber").value || "";
 
-  // ✅ ВСЕГДА ПО 9 ПОЗИЦИЙ
-  const ITEMS = 9;
+  // ✅ ВСЕГДА ПО 8 ПОЗИЦИЙ
+  const ITEMS = 8;
 
   function chunk(arr) {
     let r = [];
