@@ -42,3 +42,9 @@ button {
   background: white;
   cursor: pointer;
 }
+
+.item-number {
+  width: 100%;
+  font-weight: bold;
+  margin-bottom: 5px;
+}

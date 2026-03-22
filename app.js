@@ -206,12 +206,15 @@ function render() {
     div.className = "item";
 
     div.innerHTML = `
-      <input value="${i.name}" onchange="order[${index}].name=this.value">
-      <input value="${qty}" type="number" onchange="order[${index}].qty=Number(this.value); render();">
-      <input value="${price}" type="number" onchange="order[${index}].price=Number(this.value); render();">
-      <b>${price * qty} ₽</b>
-      <button onclick="removeItem(${index})">Удалить</button>
-    `;
+  <div class="item-number">№${index + 1}</div>
+
+  <input value="${i.name}" onchange="order[${index}].name=this.value">
+  <input value="${qty}" type="number" onchange="order[${index}].qty=Number(this.value); render();">
+  <input value="${price}" type="number" onchange="order[${index}].price=Number(this.value); render();">
+  <b>${price * qty} ₽</b>
+
+  <button onclick="removeItem(${index})">Удалить</button>
+`;
 
     box.appendChild(div);
   });
